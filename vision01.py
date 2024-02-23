@@ -1,7 +1,7 @@
 import torch
+from helper import accuracy_fn
 from torch import nn
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor
@@ -11,27 +11,21 @@ class_names = train_data.classes
 from torch.utils.data import DataLoader
 BATCH_SIZE = 32
 train_dataloader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True )
-
 test_dataloader = DataLoader(test_data,batch_size=BATCH_SIZE,shuffle=False )
-flatten_model = nn.Flatten()
-
 from torch import nn
 class FashionMNISTModelV0(nn.Module):
     def __init__(self, input_shape: int, hidden_units: int, output_shape: int):
         super().__init__()
         self.layer_stack = nn.Sequential(nn.Flatten(),nn.Linear(in_features=input_shape, out_features=hidden_units),nn.ReLU(), 
-                                         nn.Linear(in_features=hidden_units, out_features=output_shape),nn.ReLU(),)
-    
+                                         nn.Linear(in_features=hidden_units, out_features=output_shape),nn.ReLU(),)    
     def forward(self, x: torch.Tensor):
         return self.layer_stack(x)
 torch.manual_seed(42)
-
 model_0 = FashionMNISTModelV0(input_shape=784,hidden_units=10,output_shape=len(class_names))
 model_0.to(device)
 torchmetrics.Accuracy(task = 'multiclass', num_classes=len(class_names)).to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(params=model_0.parameters(), lr=0.1)
-
 epochs = 3
 for epoch in tqdm(range(epochs)):
     print(f"Epoch: {epoch}\n-------")
@@ -56,12 +50,8 @@ for epoch in tqdm(range(epochs)):
         test_loss /= len(test_dataloader)
         test_acc /= len(test_dataloader)
     print(f"\nTrain loss: {train_loss:.5f} | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%\n")
-
 torch.manual_seed(42)
-def eval_model(model: torch.nn.Module, 
-               data_loader: torch.utils.data.DataLoader, 
-               loss_fn: torch.nn.Module, 
-               accuracy_fn):
+def eval_model(model: torch.nn.Module,data_loader: torch.utils.data.DataLoader, loss_fn: torch.nn.Module, accuracy_fn):
     loss, acc = 0, 0
     model.eval()
     with torch.inference_mode():
@@ -71,7 +61,6 @@ def eval_model(model: torch.nn.Module,
             acc += accuracy_fn(y_true=y, y_pred=y_pred.argmax(dim=1))
             loss /= len(data_loader)        acc /= len(data_loader)
     return {"model_name": model.__class__.__name__, "model_loss": loss.item(), "model_acc": acc}
-
 model_0_results = eval_model(model=model_0, data_loader=test_dataloader, loss_fn=loss_fn, accuracy_fn=accuracy_fn)
 
 
