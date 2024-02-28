@@ -9,6 +9,10 @@ train_data = datasets.FashionMNIST(root="data",train=True, download=True, transf
 test_data = datasets.FashionMNIST(root="data",train=False,download=True,transform=ToTensor())
 class_names = train_data.classes
 from torch.utils.data import DataLoader
+def accuracy_fn(y_true, y_pred):
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct / len(y_pred)) * 100
+    return acc
 BATCH_SIZE = 32
 train_dataloader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True )
 test_dataloader = DataLoader(test_data,batch_size=BATCH_SIZE,shuffle=False )
@@ -27,7 +31,7 @@ torchmetrics.Accuracy(task = 'multiclass', num_classes=len(class_names)).to(devi
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(params=model_0.parameters(), lr=0.1)
 epochs = 3
-for epoch in tqdm(range(epochs)):
+for epoch in tqdm.tqdm(range(epochs)):
     print(f"Epoch: {epoch}\n-------")
     train_loss = 0
     for batch, (X, y) in enumerate(train_dataloader):
@@ -59,7 +63,8 @@ def eval_model(model: torch.nn.Module,data_loader: torch.utils.data.DataLoader, 
             y_pred = model(X)
             loss += loss_fn(y_pred, y)
             acc += accuracy_fn(y_true=y, y_pred=y_pred.argmax(dim=1))
-            loss /= len(data_loader)        acc /= len(data_loader)
+            loss /= len(data_loader)
+            acc /= len(data_loader)
     return {"model_name": model.__class__.__name__, "model_loss": loss.item(), "model_acc": acc}
 model_0_results = eval_model(model=model_0, data_loader=test_dataloader, loss_fn=loss_fn, accuracy_fn=accuracy_fn)
 
